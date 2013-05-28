@@ -68,7 +68,7 @@ NSString *kCellID = @"cellID";                          // UICollectionViewCell 
 
 - (NSInteger)collectionView:(UICollectionView *)view numberOfItemsInSection:(NSInteger)section;
 {
-    return 164;
+    return 364;
 }
 
 - (UICollectionViewCell *)collectionView:(UICollectionView *)cv cellForItemAtIndexPath:(NSIndexPath *)indexPath;
@@ -90,17 +90,7 @@ NSString *kCellID = @"cellID";                          // UICollectionViewCell 
     
     //operation.runLoopModes = [NSSet setWithObject:NSDefaultRunLoopMode];
     
-    // let's see if we have already tried to get the newest URL for this file...
-    
     operation.outputStream = [NSOutputStream outputStreamToFileAtPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"ubuntu-%f.iso", [NSDate timeIntervalSinceReferenceDate]]] append:NO];
-    
-    /*
-    [operation setDownloadProgressBlock:^(NSUInteger bytesRead, long long totalBytesRead, long long totalBytesExpectedToRead) {
-        NSLog(@"in dl progress block: %i, %lli, %lli (%f)", bytesRead, totalBytesRead, totalBytesExpectedToRead, ((double)totalBytesRead / (double)totalBytesExpectedToRead));
-        
-    }];
-     */
-    
     
     [operation setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
         NSLog(@"Successfully downloaded file!");
