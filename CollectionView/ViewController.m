@@ -55,6 +55,7 @@ NSString *kCellID = @"cellID";                          // UICollectionViewCell 
 
 @implementation ViewController {
     NSOperationQueue *_downloadOperationQueue;
+    NSString *_urlString;
 }
 
 - (void)viewDidLoad
@@ -62,8 +63,12 @@ NSString *kCellID = @"cellID";                          // UICollectionViewCell 
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
     
-    UIBarButtonItem *addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd target:self action:@selector(startDownload:)];
-    self.navigationItem.rightBarButtonItem = addButton;
+    _urlString = @"http://www.ubuntu.com/start-download?distro=desktop&bits=32&release=lts";
+    
+    UIBarButtonItem *afButton = [[UIBarButtonItem alloc] initWithTitle:@"AF" style:UIBarButtonItemStyleBordered target:self action:@selector(startAFDownload:)];
+    UIBarButtonItem *blockButton = [[UIBarButtonItem alloc] initWithTitle:@"Block" style:UIBarButtonItemStyleBordered target:self action:@selector(startBlockDownload:)];
+    self.navigationItem.rightBarButtonItem = afButton;
+    self.navigationItem.leftBarButtonItem = blockButton;
 }
 
 - (NSInteger)collectionView:(UICollectionView *)view numberOfItemsInSection:(NSInteger)section;
@@ -80,15 +85,16 @@ NSString *kCellID = @"cellID";                          // UICollectionViewCell 
     return cell;
 }
 
-- (void)startDownload:(id)sender
+- (void)startAFDownload:(id)sender
 {
-    NSLog(@"starting download");
-    NSString *urlString = @"http://www.ubuntu.com/start-download?distro=desktop&bits=32&release=lts";
+    NSLog(@"starting AF download");
     
-    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:urlString]];
+    NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:_urlString]];
     AFHTTPRequestOperation *operation = [[AFHTTPRequestOperation alloc] initWithRequest:request];
+    [operation setThreadPriority:0.1];
     
     //operation.runLoopModes = [NSSet setWithObject:NSDefaultRunLoopMode];
+    
     
     operation.outputStream = [NSOutputStream outputStreamToFileAtPath:[NSTemporaryDirectory() stringByAppendingPathComponent:[NSString stringWithFormat:@"ubuntu-%f.iso", [NSDate timeIntervalSinceReferenceDate]]] append:NO];
     
@@ -99,6 +105,27 @@ NSString *kCellID = @"cellID";                          // UICollectionViewCell 
     }];
     
     [[self downloadOperationQueue] addOperation:operation];
+}
+
+- (void)startBlockDownload:(id)sender
+{
+    NSLog(@"starting block download");
+    
+    dispatch_queue_t defQueue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+    
+    void (^downloadBlock) (void);
+    
+    downloadBlock = ^{
+        NSURLRequest *request = [NSURLRequest requestWithURL:[NSURL URLWithString:_urlString]];
+        NSURLResponse *response = nil;
+        NSError *error = nil;
+        
+        NSData* result = [NSURLConnection sendSynchronousRequest:request  returningResponse:&response error:&error];
+        
+        NSLog(@"block request done");
+    };
+    
+    dispatch_async(defQueue, downloadBlock);
 }
 
 - (NSOperationQueue *)downloadOperationQueue
